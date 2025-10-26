@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
+import os
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 # Set page configuration
@@ -38,9 +39,12 @@ st.markdown("<h1 class='title'>Employee Salary Prediction 💰</h1>", unsafe_all
 # Load and cache the data
 @st.cache_data
 def load_data():
-    df = pd.read_csv('Salary.csv')
-    # Convert salary to thousands for better visualization
-    return df
+    try:
+        df = pd.read_csv('Salary.csv')
+        return df
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        return None
 
 df = load_data()
 
@@ -105,9 +109,13 @@ else:  # Salary Prediction
     # Load the saved model and scaler
     @st.cache_resource
     def load_model():
-        with open('salary_model.pkl', 'rb') as file:
-            model_data = pickle.load(file)
-        return model_data['model'], model_data['scaler']
+        try:
+            with open('salary_model.pkl', 'rb') as file:
+                model_data = pickle.load(file)
+            return model_data['model'], model_data['scaler']
+        except Exception as e:
+            st.error(f"Error loading model: {e}")
+            return None, None
     
     model, scaler = load_model()
     
