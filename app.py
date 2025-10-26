@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pickle
-import os
+import plotly.express as px
+import plotly.graph_objects as go
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 # Set page configuration
@@ -77,31 +76,38 @@ elif page == "Data Visualization":
     
     # Salary Distribution
     st.subheader("Salary Distribution")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.histplot(data=df, x='Salary', bins=30, color='#2e86de')
-    plt.title("Distribution of Salaries")
-    st.pyplot(fig)
+    try:
+        fig = px.histogram(df, x='Salary', nbins=30, title="Distribution of Salaries")
+        fig.update_layout(showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception as e:
+        st.error(f"Error creating salary distribution plot: {e}")
     
     # Age vs Salary
     st.subheader("Age vs Salary")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    sns.scatterplot(data=df, x='Age', y='Salary', hue='PhD', style='Gender')
-    plt.title("Age vs Salary (with Gender and PhD)")
-    st.pyplot(fig)
+    fig = px.scatter(df, x='Age', y='Salary', 
+                    color='PhD', symbol='Gender',
+                    labels={'PhD': 'Has PhD', 'Gender': 'Gender'},
+                    title="Age vs Salary (with Gender and PhD)")
+    st.plotly_chart(fig, use_container_width=True)
     
     # Average Salary by Gender and PhD
     st.subheader("Average Salary by Gender and PhD")
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    col1, col2 = st.columns(2)
     
-    sns.boxplot(data=df, x='Gender', y='Salary', ax=ax1)
-    ax1.set_title("Salary Distribution by Gender")
-    ax1.set_xticklabels(['Female', 'Male'])
+    with col1:
+        fig1 = px.box(df, x='Gender', y='Salary', 
+                     labels={'Gender': '', 'Salary': 'Salary'},
+                     title="Salary Distribution by Gender")
+        fig1.update_xaxes(ticktext=['Female', 'Male'], tickvals=[0, 1])
+        st.plotly_chart(fig1, use_container_width=True)
     
-    sns.boxplot(data=df, x='PhD', y='Salary', ax=ax2)
-    ax2.set_title("Salary Distribution by PhD")
-    ax2.set_xticklabels(['No PhD', 'PhD'])
-    
-    st.pyplot(fig)
+    with col2:
+        fig2 = px.box(df, x='PhD', y='Salary',
+                     labels={'PhD': '', 'Salary': 'Salary'},
+                     title="Salary Distribution by PhD")
+        fig2.update_xaxes(ticktext=['No PhD', 'PhD'], tickvals=[0, 1])
+        st.plotly_chart(fig2, use_container_width=True)
 
 else:  # Salary Prediction
     st.header("🎯 Salary Prediction")
@@ -161,11 +167,9 @@ else:  # Salary Prediction
         st.dataframe(example_data)
         
         # Plot feature importance
-        fig, ax = plt.subplots(figsize=(10, 6))
         features = ['Age', 'Gender', 'PhD']
         importance = abs(model.coef_)
-        plt.bar(features, importance)
-        plt.title("Feature Importance")
-        plt.xlabel("Features")
-        plt.ylabel("Absolute Coefficient Value")
-        st.pyplot(fig)
+        fig = px.bar(x=features, y=importance,
+                    title="Feature Importance",
+                    labels={'x': 'Features', 'y': 'Absolute Coefficient Value'})
+        st.plotly_chart(fig, use_container_width=True)
